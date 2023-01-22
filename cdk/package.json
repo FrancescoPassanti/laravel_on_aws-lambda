@@ -9,7 +9,8 @@
     "watch": "tsc -w",
     "test": "jest",
     "cdk": "cdk",
-    "deploy:staging": "STAGE=staging cdk deploy --profile fp"
+    "deploy:staging": "STAGE=staging cdk deploy --profile fp",
+    "destroy:staging": "STAGE=staging cdk destroy --profile fp"
   },
   "devDependencies": {
     "@types/jest": "^27.5.2",

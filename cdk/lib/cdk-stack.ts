@@ -22,23 +22,39 @@ import {
 } from "aws-cdk-lib/aws-events";
 import { LambdaFunction } from "aws-cdk-lib/aws-events-targets";
 
+const cronFunctions = [
+  {
+    command: "hello:world",
+    cron: {
+      minute: "0",
+      hour: "0",
+      day: "*",
+      month: "*",
+      year: "*",
+    },
+  },
+];
+
 export class CdkStack extends Stack {
   private api?: HttpApi;
   private envs: BaseEnvs;
 
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
+    // Init envs variable
     this.envs = baseEnvs();
+    //Create an HTTP Gateway
     this.configureApiGateway();
+    // Configure Laravel Project
     this.configureLaravelProject();
   }
 
   private configureLaravelProject() {
     // Deploy lambda for HTTP requests
-    const lambdaLaravelFunctionName = this.getResourceName("Laravel");
-    const lamdaLaravelFunction = this.createLambdaFunction({
+    const appFunctionName = this.getResourceName("App");
+    const appFunction = this.createLambdaFunction({
       lambdaName: this.getResourceName("Laravel"),
-      handler: "public/index.php",
+      handler: "public/index.php", // Set as handler the public/index.php file
       timeout: 20,
       layers: [
         LayerVersion.fromLayerVersionArn(
@@ -49,6 +65,7 @@ export class CdkStack extends Stack {
       ],
     });
 
+    // Proxy all the requests to the app function
     ["/", "/{any+}"].forEach((path) => {
       this.api?.addRoutes({
         path,
@@ -59,18 +76,15 @@ export class CdkStack extends Stack {
           HttpMethod.DELETE,
           HttpMethod.OPTIONS,
         ],
-        integration: new HttpLambdaIntegration(
-          lambdaLaravelFunctionName,
-          lamdaLaravelFunction
-        ),
+        integration: new HttpLambdaIntegration(appFunctionName, appFunction),
       });
     });
 
-    // Deploy lambda for Cron
-    const lambdaName = this.getResourceName("Artisan");
-    const lambdaFunction = this.createLambdaFunction({
-      lambdaName: lambdaName,
-      handler: "artisan-for-lambda.php",
+    // Deploy lambda for Artisan
+    const artisanFunctionName = this.getResourceName("Artisan");
+    const artisanFunction = this.createLambdaFunction({
+      lambdaName: artisanFunctionName,
+      handler: "artisan-for-lambda.php", // Set artisan-for-lambda.php as handler
       timeout: 60,
       layers: [
         LayerVersion.fromLayerVersionArn(
@@ -81,22 +95,11 @@ export class CdkStack extends Stack {
       ],
     });
 
-    [
-      {
-        command: "hello:world",
-        cron: {
-          minute: "0",
-          hour: "0",
-          day: "*",
-          month: "*",
-          year: "*",
-        },
-      },
-    ].forEach(({ cron, command }) => {
-      new Rule(this, `${lambdaName}-Rule`, {
+    cronFunctions.forEach(({ cron, command }) => {
+      new Rule(this, `${artisanFunctionName}-Rule`, {
         schedule: Schedule.cron(cron),
         targets: [
-          new LambdaFunction(lambdaFunction, {
+          new LambdaFunction(artisanFunction, {
             event: RuleTargetInput.fromText(command),
           }),
         ],

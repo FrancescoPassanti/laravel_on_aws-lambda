@@ -4,9 +4,9 @@ build-and-deploy-staging:
 
 build-staging:
 	@echo "Build lambda [STAGING]"
-	@composer install --working-dir=api -q --no-ansi --no-interaction --no-scripts --no-suggest --no-progress --prefer-dist
+	@cd laravel && composer install -q --no-ansi --no-interaction --no-scripts --no-suggest --no-progress --prefer-dist
 	@rm -rf cdk/build/laravel && mkdir -p cdk/build/laravel
-	@cp -R api/app api/bootstrap api/config api/public api/resources api/routes api/storage api/vendor api/artisan api/artisan-for-lambda.php api/composer.json api/composer.lock cdk/build/laravel 
+	@cp -R laravel/app laravel/bootstrap laravel/config laravel/public laravel/resources laravel/routes laravel/storage laravel/vendor laravel/artisan laravel/artisan-for-lambda.php laravel/composer.json laravel/composer.lock cdk/build/laravel 
 
 deploy-staging:
 	@echo "Deploy lambda [STAGING]"

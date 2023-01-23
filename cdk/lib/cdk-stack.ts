@@ -53,7 +53,7 @@ export class CdkStack extends Stack {
     // Deploy lambda for HTTP requests
     const appFunctionName = this.getResourceName("App");
     const appFunction = this.createLambdaFunction({
-      lambdaName: this.getResourceName("Laravel"),
+      lambdaName: appFunctionName,
       handler: "public/index.php", // Set as handler the public/index.php file
       timeout: 20,
       layers: [
